@@ -1,0 +1,24 @@
+[2018-03-01 18:09:30.364827]:  S:INFO     M:REG        T:CDolphinRegManager Scope:run        ->init_redis
+
+test json split right json_extract_prefix {"a":1, "b":"2"}
+
+[2018-03-01 18:09:30.364827]:  S:INFO     M:REG        T:CDolphinRegManager Scope:run        ->init_redis
+
+test json split error json_extract_prefix {"c":1, 
+
+[2018-03-01 18:09:30.362787]:  S:INFO     M:REG        T:CDolphinRegManager Scope:
+
+set_redis_mode_standalone is_standalone false
+
+[2018-03-01 18:09:30.364709]:  S:INFO     M:REG        T:CDolphinRegManager Scope:run        ->initialize_restserver
+
+Listening for requests at: http://0.0.0.0:8080/dolphin/reg
+
+[2018-03-01 18:09:30.364827]:  S:INFO     M:REG        T:CDolphinRegManager Scope:run        ->init_redis
+
+init redis cluster with addr 172.26.0.44:7000
+
+[2018-03-01 18:12:33.921516]:  S:ERROR    M:REG        T:CDolphinRegRestHandler Scope:
+
+error: json_loads failed, on line 1:'[' or '{' expected near end of file
+
