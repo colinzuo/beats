@@ -20,6 +20,7 @@ type decodeJSONFields struct {
 	overwriteKeys bool
 	processArray  bool
 	target        *string
+	addErrorKey   bool
 }
 
 type config struct {
@@ -28,12 +29,14 @@ type config struct {
 	OverwriteKeys bool     `config:"overwrite_keys"`
 	ProcessArray  bool     `config:"process_array"`
 	Target        *string  `config:"target"`
+	AddErrorKey   bool     `config:"add_error_key"`
 }
 
 var (
 	defaultConfig = config{
 		MaxDepth:     1,
 		ProcessArray: false,
+		AddErrorKey: true,
 	}
 )
 
@@ -43,7 +46,8 @@ func init() {
 	processors.RegisterPlugin("decode_json_fields",
 		configChecked(newDecodeJSONFields,
 			requireFields("fields"),
-			allowedFields("fields", "max_depth", "overwrite_keys", "process_array", "target", "when")))
+			allowedFields("fields", "max_depth", "overwrite_keys", 
+				"process_array", "target", "add_error_key", "when")))
 }
 
 func newDecodeJSONFields(c *common.Config) (processors.Processor, error) {
@@ -55,7 +59,9 @@ func newDecodeJSONFields(c *common.Config) (processors.Processor, error) {
 		return nil, fmt.Errorf("fail to unpack the decode_json_fields configuration: %s", err)
 	}
 
-	f := &decodeJSONFields{fields: config.Fields, maxDepth: config.MaxDepth, overwriteKeys: config.OverwriteKeys, processArray: config.ProcessArray, target: config.Target}
+	f := &decodeJSONFields{fields: config.Fields, maxDepth: config.MaxDepth, 
+			overwriteKeys: config.OverwriteKeys, processArray: config.ProcessArray, 
+			target: config.Target, addErrorKey: config.AddErrorKey}
 	return f, nil
 }
 
@@ -76,17 +82,18 @@ func (f *decodeJSONFields) Run(event *beat.Event) (*beat.Event, error) {
 			continue
 		}
 
+		target := field
+		if f.target != nil {
+			target = *f.target
+		}
+
 		var output interface{}
 		err = unmarshal(f.maxDepth, text, &output, f.processArray)
 		if err != nil {
 			debug("Error trying to unmarshal %s", text)
 			errs = append(errs, err.Error())
-			continue
-		}
-
-		target := field
-		if f.target != nil {
-			target = *f.target
+			// continue
+			output = map[string]string{"orig_json_string": text}
 		}
 
 		if target != "" {
@@ -108,9 +115,20 @@ func (f *decodeJSONFields) Run(event *beat.Event) (*beat.Event, error) {
 	}
 
 	if len(errs) > 0 {
-		return event, fmt.Errorf(strings.Join(errs, ", "))
+		if f.addErrorKey {
+			_, err := event.PutValue("error", createJSONError(fmt.Sprintf("Error decoding JSON: %s", strings.Join(errs, ", "))))
+			if err != nil {
+				debug("Error trying to PutValue for field : error in event : %v", event)
+			}
+		} else {
+			return event, fmt.Errorf(strings.Join(errs, ", "))
+		}
 	}
 	return event, nil
+}
+
+func createJSONError(message string) common.MapStr {
+	return common.MapStr{"message": message, "type": "json"}
 }
 
 func unmarshal(maxDepth int, text string, fields *interface{}, processArray bool) error {

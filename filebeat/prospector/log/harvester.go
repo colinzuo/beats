@@ -19,6 +19,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"strings"
 
 	"github.com/satori/go.uuid"
 	"golang.org/x/text/transform"
@@ -272,6 +273,19 @@ func (h *Harvester) Run() error {
 				"offset": state.Offset, // Offset here is the offset before the starting char.
 			}
 			fields.DeepUpdate(message.Fields)
+
+			// extract json if exist
+			if h.config.JSONExtract != nil {
+				extractPrefix := defaultJsonExtractPrefix
+				if len(h.config.JSONExtract.JSONExtractPrefix) >= minJsonExtractPrefixLen {
+					extractPrefix = h.config.JSONExtract.JSONExtractPrefix
+				}
+				if strings.Index(text, extractPrefix) > 0 {
+					splitted := strings.SplitN(text, extractPrefix, 2)
+					text = splitted[0]
+					fields["json_extract"] = splitted[1]
+				}
+			}
 
 			// Check if json fields exist
 			var jsonFields common.MapStr
