@@ -283,7 +283,7 @@ func (h *Harvester) Run() error {
 				if strings.Index(text, extractPrefix) > 0 {
 					splitted := strings.SplitN(text, extractPrefix, 2)
 					text = splitted[0]
-					fields["json_extract"] = splitted[1]
+					fields["json_extract"] = strings.Replace(splitted[1], "\n", "", -1)
 				}
 			}
 
