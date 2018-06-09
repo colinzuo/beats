@@ -1,0 +1,53 @@
+filebeat.registry_flush: 2s
+
+#=========================== Filebeat inputs =============================
+
+filebeat.prospectors:
+
+- type: log
+
+  enabled: true
+
+  paths:
+    - tests/files/logs/dolphin.log
+
+  include_lines: ['S:WARN', 'S:ERROR', 'json_extract_prefix']
+
+  multiline.pattern: '^\[[0-9]{4}-[0-9]{2}-[0-9]{2}'
+  multiline.negate: true
+  multiline.match: after
+
+  json_extract.add_error_key: true
+
+  fields:
+    container_type: dolphin
+
+#============================= Filebeat modules ===============================
+
+filebeat.config.modules:
+  # Glob pattern for configuration loading
+  path: ${path.config}/modules.d/*.yml
+
+  # Set to true to enable config reloading
+  reload.enabled: false
+
+  # Period on which files under path should be checked for changes
+  #reload.period: 10s
+
+#================================ Processors ===================================
+
+processors:
+  - decode_json_fields:
+      fields: ["json_extract"]
+      max_depth: 20
+      process_array: true
+  - drop_fields:
+      fields: ["beat.name", "beat.version"]
+
+#================================ Outputs =====================================
+
+#----------------------------- Logstash output --------------------------------
+output.console:
+  pretty: true
+
+         

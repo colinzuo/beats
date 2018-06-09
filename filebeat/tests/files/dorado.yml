@@ -63,4 +63,4 @@ processors:
 #----------------------------- Logstash output --------------------------------
 output.logstash:
   # The Logstash hosts
-  hosts: ["logstash:5044"]
+  hosts: ["172.26.0.41:5044"]

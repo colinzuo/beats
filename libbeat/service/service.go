@@ -43,12 +43,14 @@ func HandleSignals(stopFunction func()) {
 
 // cmdline flags
 var memprofile, cpuprofile, httpprof *string
+var blockprofile *bool
 var cpuOut *os.File
 
 func init() {
 	memprofile = flag.String("memprofile", "", "Write memory profile to this file")
 	cpuprofile = flag.String("cpuprofile", "", "Write cpu profile to file")
 	httpprof = flag.String("httpprof", "", "Start pprof http server")
+	blockprofile = flag.Bool("blockprofile", false, "Enable blockprofile")
 }
 
 // ProfileEnabled checks whether the beat should write a cpu or memory profile.
@@ -62,6 +64,10 @@ func withCPUProfile() bool { return *cpuprofile != "" }
 // BeforeRun takes care of necessary actions such as creating files
 // before the beat should run.
 func BeforeRun() {
+	if *blockprofile {
+		runtime.SetBlockProfileRate(1)
+	}
+
 	if withCPUProfile() {
 		cpuOut, err := os.Create(*cpuprofile)
 		if err != nil {

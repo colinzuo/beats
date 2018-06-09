@@ -28,6 +28,7 @@ func genRunCmd(name, idxPrefix, version string, beatCreator beat.Creator, runFla
 	runCmd.Flags().AddGoFlag(flag.CommandLine.Lookup("httpprof"))
 	runCmd.Flags().AddGoFlag(flag.CommandLine.Lookup("cpuprofile"))
 	runCmd.Flags().AddGoFlag(flag.CommandLine.Lookup("memprofile"))
+	runCmd.Flags().AddGoFlag(flag.CommandLine.Lookup("blockprofile"))
 	runCmd.Flags().AddGoFlag(flag.CommandLine.Lookup("setup"))
 
 	// TODO deprecate in favor of subcommands (7.0):
