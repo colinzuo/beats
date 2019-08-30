@@ -35,6 +35,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/text/transform"
@@ -313,6 +314,16 @@ func (h *Harvester) Run() error {
 			}
 			fields.DeepUpdate(message.Fields)
 
+			// extract json if exist
+			if h.config.JSONExtract != nil {
+				extractPrefix := h.config.JSONExtract.JSONExtractPrefix
+				if strings.Index(text, extractPrefix) > 0 {
+					splitted := strings.SplitN(text, extractPrefix, 2)
+					text = splitted[0]
+					fields["json_extract"] = strings.Replace(splitted[1], "\n", "", -1)
+				}
+			}
+						
 			// Check if json fields exist
 			var jsonFields common.MapStr
 			if f, ok := fields["json"]; ok {

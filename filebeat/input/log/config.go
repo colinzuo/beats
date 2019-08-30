@@ -104,6 +104,7 @@ type config struct {
 	MaxBytes       int                     `config:"max_bytes" validate:"min=0,nonzero"`
 	Multiline      *multiline.Config       `config:"multiline"`
 	JSON           *readjson.Config        `config:"json"`
+	JSONExtract  *JSONExtractConfig      `config:"json_extract"`
 
 	// Hidden on purpose, used by the docker input:
 	DockerJSON *struct {
@@ -112,6 +113,10 @@ type config struct {
 		Format   string `config:"format"`
 		CRIFlags bool   `config:"cri_flags"`
 	} `config:"docker-json"`
+}
+
+type JSONExtractConfig struct {
+	JSONExtractPrefix    string `config:"json_extract_prefix"`
 }
 
 type LogConfig struct {
@@ -132,6 +137,8 @@ const (
 	ScanSortNone     = ""
 	ScanSortModtime  = "modtime"
 	ScanSortFilename = "filename"
+
+	minJsonExtractPrefixLen = 10
 )
 
 // ValidScanOrder of valid scan orders
@@ -175,6 +182,11 @@ func (c *config) Validate() error {
 	if c.JSON != nil && len(c.JSON.MessageKey) == 0 &&
 		(len(c.IncludeLines) > 0 || len(c.ExcludeLines) > 0) {
 		return fmt.Errorf("When using the JSON decoder and line filtering together, you need to specify a message_key value")
+	}
+
+	if c.JSONExtract != nil && len(c.JSONExtract.JSONExtractPrefix) > 0 &&
+		len(c.JSONExtract.JSONExtractPrefix) < minJsonExtractPrefixLen {
+		return fmt.Errorf("json_extract_prefix must be > %v", minJsonExtractPrefixLen)
 	}
 
 	if c.ScanSort != "" {
